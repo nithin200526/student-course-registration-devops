@@ -1,47 +1,32 @@
+from flask import Flask, render_template, request, redirect
 import os
-from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-# Home Page
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('index.html')
 
-# Registration Page
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        phone = request.form['phone']
-        course = request.form['course']
-        comments = request.form['comments']
+    name = request.form['name']
+    email = request.form['email']
+    phone = request.form['phone']
+    course = request.form['course']
+    comments = request.form['comments']
 
-        # Save to CSV file
-        with open('registrations.csv', 'a') as file:
-            file.write(f"{name},{email},{phone},{course},{comments}\n")
+    # Save the data to a CSV file
+    with open('registrations.csv', 'a') as f:
+        f.write(f'{name},{email},{phone},{course},{comments}\n')
 
-        return redirect(url_for('success', name=name, course=course))
-
-    return render_template('register.html')
-
-# Success / Thank You Page
-@app.route('/success')
-def success():
-    name = request.args.get('name')
-    course = request.args.get('course')
     return render_template('success.html', name=name, course=course)
 
-# Students List Page
 @app.route('/students')
 def students():
     student_list = []
-
     try:
         with open('registrations.csv', 'r') as file:
             for line in file:
-                # Handle possible missing commas or empty fields
                 fields = line.strip().split(',')
                 if len(fields) == 5:
                     name, email, phone, course, comments = fields
@@ -57,6 +42,7 @@ def students():
 
     return render_template('students.html', students=student_list)
 
+# Required for Render.com (bind to 0.0.0.0 and use env PORT)
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)
